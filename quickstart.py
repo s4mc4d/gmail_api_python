@@ -59,12 +59,16 @@ def get_all_messages_id():
     print(f"First page token {nextPageToken}")
 
     # retrieve all other pages of messages ids
-    while len(messages_list) % 500 == 0:
+    while True: #len(messages_list) % 500 == 0:
         print(f"Next page : {nextPageToken}")
         messages_request_response_2 = service.users().messages().list(userId='me', maxResults=500, pageToken=nextPageToken).execute()
         new_messages = messages_request_response_2["messages"]
-        nextPageToken = messages_request_response_2['nextPageToken']
         messages_list.extend(new_messages)
+        try:
+            nextPageToken = messages_request_response_2['nextPageToken']
+        except KeyError:
+            print(f"No more page token")
+            break
 
     return messages_list
 
