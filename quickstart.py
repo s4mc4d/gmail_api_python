@@ -1,7 +1,10 @@
 """Testing gmail api 
 Steps can be found on https://towardsdatascience.com/extracting-metadata-from-medium-daily-digest-newsletters-via-gmail-api-97eee890a439
-
+Objects documentation can be found here : https://developers.google.com/gmail/api/reference/rest
 The goal is to retrieve all senders emails in order to make statistics
+
+NB : Gmail API must be activated and a project should be defined in Google Cloud Platform
+See API & Services
 """
 
 from __future__ import print_function
@@ -73,7 +76,7 @@ def get_all_messages_id():
     return messages_list
 
 
-def extract_senders_from_message_id(messages_dict):
+def process_all_messages_id(messages_dict):
     """Extracts sender email from Messages
 
     Parameters
@@ -93,23 +96,45 @@ def extract_senders_from_message_id(messages_dict):
     # Browsing through messages content to retrieve email addresses
     for i,message_id in enumerate(messages_dict):
         print(i)
-        message_obj = message_objects.get(id=message_id["id"],userId="me").execute()
-        # source  : https://developersclear.google.com/gmail/api/reference/rest/v1/users.messages/get
-        
-        data = message_obj["payload"]["headers"]  # this is a list of dict {"name":...,"value":...}
-        for item in data:
-            if item["name"].lower().strip() in ["from","to"]:
-                res = re.findall(EMAIL_REGEX,item["value"])
-                emails.extend(res)
-        # pprint.pprint(res)
+        result = extract_senders_from_message_id(message_objects,message_id)
+        emails.extend(result)
 
     return emails
+
+def extract_senders_from_single_id(service_users_messages_obj,message_id):
+    """Finds email addresses from a single mail id
+
+    Parameters
+    ----------
+    service_users_messages_obj : object
+        result of service.users().messages()
+    message_id : string
+        unique id of mail
+
+    Returns
+    -------
+    output : list
+       list of emails
+    """
+    
+    # service_users_messages_obj is the result of build('gmail', 'v1', credentials=get_credentials()).users().messages()
+    message_obj = service_users_messages_obj.get(id=message_id["id"],userId="me").execute()
+        # source  : https://developersclear.google.com/gmail/api/reference/rest/v1/users.messages/get
+    
+    data = message_obj["payload"]["headers"]  # this is a list of dict {"name":...,"value":...}
+    output = []
+    for item in data:
+        if item["name"].lower().strip() in ["from","to"]:
+            res = re.findall(EMAIL_REGEX,item["value"])
+            output.extend(res)
+    
+    return output
     
 
 
 if __name__ == '__main__':
 
     message_dict_results = get_all_messages_id()
-    emails_output = extract_senders_from_message_id(message_dict_results)
+    emails_output = process_all_messages_id(message_dict_results)
     with open("emails.txt", "w") as target:
         target.write("\n".join(emails_output))
