@@ -8,20 +8,19 @@ See API & Services
 """
 
 from __future__ import print_function
-from concurrent.futures import ThreadPoolExecutor
-from multiprocessing.dummy import Pool
-from functools import partial
 
 import os
 import pprint
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from multiprocessing.dummy import Pool
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-
-import threading
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
