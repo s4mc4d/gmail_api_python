@@ -79,31 +79,6 @@ def get_all_messages_id():
     return messages_list
 
 
-def process_all_messages_id(messages_dict):
-    """Extracts sender email from Messages
-
-    Parameters
-    ----------
-    messages_dict : list of dict 
-        [{"id":...,threadId:...}, ...]
-
-    Returns
-    -------
-    emails : list
-        list of emails
-    """
-    service = build('gmail', 'v1', credentials=get_credentials())
-    message_objects = service.users().messages()
-    
-    emails = []
-    # Browsing through messages content to retrieve email addresses
-    for i,message_id in enumerate(messages_dict):
-        print(i)
-        result = extract_senders_from_single_id(message_objects,message_id)
-        emails.extend(result)
-
-    return emails
-
 
 def process_all_messages_id_parallel(messages_dict):
     """Extracts sender email from Messages
@@ -124,13 +99,13 @@ def process_all_messages_id_parallel(messages_dict):
     # messages_ids_only = [item["id"] for item in messages_dict]
 
     # Processing all messages content in parallel to retrieve email addresses
-    emails = pool.map(func=extract_senders_from_single_id_2,iterable=messages_dict)
+    emails = pool.map(func=extract_senders_from_single_id,iterable=messages_dict)
     pool.close()
     pool.join()
 
     return emails
 
-def extract_senders_from_single_id_2(message_id):
+def extract_senders_from_single_id(message_id):
     """Finds email addresses from a single mail id
 
     Parameters
@@ -163,34 +138,6 @@ def extract_senders_from_single_id_2(message_id):
     return output
 
 
-def extract_senders_from_single_id(service_users_messages_obj,message_id):
-    """Finds email addresses from a single mail id
-
-    Parameters
-    ----------
-    service_users_messages_obj : object
-        result of service.users().messages()
-    message_id : string
-        unique id of mail
-
-    Returns
-    -------
-    output : list
-       list of emails
-    """
-    
-    # service_users_messages_obj is the result of build('gmail', 'v1', credentials=get_credentials()).users().messages()
-    message_obj = service_users_messages_obj.get(id=message_id["id"],userId="me").execute()
-        # source  : https://developersclear.google.com/gmail/api/reference/rest/v1/users.messages/get
-    
-    data = message_obj["payload"]["headers"]  # this is a list of dict {"name":...,"value":...}
-    output = []
-    for item in data:
-        if item["name"].lower().strip() in ["from","to"]:
-            res = re.findall(EMAIL_REGEX,item["value"])
-            output.extend(res)
-    
-    return output
     
 
 
@@ -198,11 +145,7 @@ if __name__ == '__main__':
 
     message_dict_results = get_all_messages_id()
 
-    # with ThreadPoolExecutor(max_workers=5) as pool:
-    #     response_list = list(pool.map(extract_senders_from_single_id,))
-
-    # emails_output = process_all_messages_id(message_dict_results)
     emails_output = process_all_messages_id_parallel(message_dict_results)
 
-    with open("emails.txt", "w") as target:
+    with open(os.path.join("data","emails_list.txt", "w")) as target:
         target.write("\n".join([item for sublist in emails_output for item in sublist]))
