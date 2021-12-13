@@ -1,3 +1,5 @@
 *.json
 .venv
 __pychache__
+*.txt
+notebooks/
