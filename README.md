@@ -4,6 +4,12 @@
 
 Detailed procedure can be found [here](https://towardsdatascience.com/extracting-metadata-from-medium-daily-digest-newsletters-via-gmail-api-97eee890a439)
 
+1. Create a new project in the Google Cloud Console
+1.  Enable the Gmail API
+1. Create Credentials
+1. OAuth Consent Screen
+1. Scopes
+
 ### Summary 
 
 - Access [Google Cloud Platform](console.cloud.google.com)
